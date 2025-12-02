@@ -7,6 +7,8 @@
  "field_order": [
   "default_is_billable",
   "price_list",
+  "default_stock_enty_type",
+  "column_break_vihk",
   "item_groups",
   "use_spares_instead_of_item"
  ],
@@ -36,12 +38,22 @@
    "fieldname": "use_spares_instead_of_item",
    "fieldtype": "Check",
    "label": "Use Spares instead of Item"
+  },
+  {
+   "fieldname": "default_stock_enty_type",
+   "fieldtype": "Link",
+   "label": "Default Stock Entry Type",
+   "options": "Stock Entry Type"
+  },
+  {
+   "fieldname": "column_break_vihk",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2022-11-17 21:30:13.119537",
+ "modified": "2025-12-02 12:06:43.452534",
  "modified_by": "Administrator",
  "module": "Service Management",
  "name": "Service Settings",
@@ -58,7 +70,9 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "track_changes": 1
 }
