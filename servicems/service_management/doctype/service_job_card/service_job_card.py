@@ -241,7 +241,9 @@ class ServiceJobCard(WebsiteGenerator):
                     self.save()
 
     def create_invoice(self):
-        if self.status != "Completed":
+        create_sales_invoice = frappe.get_single_value("Service Settings", "create_sjc_sales_invoice")
+
+        if self.status != "Completed" or not create_sales_invoice:
             return
         items = []
         workshop = frappe.get_doc("Service Workshop", self.workshop)

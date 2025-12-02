@@ -8,6 +8,7 @@
   "default_is_billable",
   "price_list",
   "default_stock_enty_type",
+  "create_sjc_sales_invoice",
   "column_break_vihk",
   "item_groups",
   "use_spares_instead_of_item"
@@ -48,12 +49,19 @@
   {
    "fieldname": "column_break_vihk",
    "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Create sales invoice immediately after submitting a Service Job Card.",
+   "fieldname": "create_sjc_sales_invoice",
+   "fieldtype": "Check",
+   "label": "Create Sales Invoice on Service Job Card submission"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-12-02 12:06:43.452534",
+ "modified": "2025-12-02 16:44:42.667846",
  "modified_by": "Administrator",
  "module": "Service Management",
  "name": "Service Settings",
