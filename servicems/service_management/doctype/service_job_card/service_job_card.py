@@ -187,6 +187,8 @@ class ServiceJobCard(WebsiteGenerator):
     def create_stock_entry(self, type):
         if self.parts and len(self.parts) > 0:
             workshop = frappe.get_doc("Service Workshop", self.workshop)
+            stock_entry_type = frappe.get_single_value("Service Settings", "default_stock_enty_type") or "Material Transfer"
+            
             items = []
             for item in self.parts:
                 if item.qty > 0:
@@ -208,8 +210,8 @@ class ServiceJobCard(WebsiteGenerator):
                     doctype="Stock Entry",
                     posting_date=nowdate(),
                     posting_time=nowtime(),
-                    stock_entry_type="Material Transfer",
-                    purpose="Material Transfer",
+                    stock_entry_type= stock_entry_type,
+                    purpose=stock_entry_type,
                     company=self.company,
                     service_job_card=self.name,
                     from_warehouse=workshop.parts_warehouse,
