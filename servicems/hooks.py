@@ -13,6 +13,12 @@ app_license = "MIT"
 
 fixtures = [{"doctype": "Custom Field", "filters": [["module", "=", "servicems"]]}]
 
+doc_events = {
+	"Material Request": {
+		"on_submit": "servicems.service_management.controllers.material_request.update_sjc_status_to_awaiting_parts",
+	}
+}
+
 # Includes in <head>
 # ------------------
 
@@ -93,13 +99,6 @@ app_include_js = "/assets/servicems/js/shortcut.js"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
 
 # Scheduled Tasks
 # ---------------
