@@ -467,7 +467,7 @@ class ServiceJobCard(WebsiteGenerator):
                     ).format(self.invoice)
                 )
 
-        self.status = "Repairing"
+        self.status = "Initiated"
         self.save()
 
         frappe.msgprint(
