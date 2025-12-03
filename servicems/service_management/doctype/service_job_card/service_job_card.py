@@ -334,14 +334,18 @@ class ServiceJobCard(WebsiteGenerator):
                     self.workshop
                 )
             )
-        
+
         item_codes = [part.item for part in self.parts if part.qty > 0]
         if not item_codes:
-            frappe.msgprint(_("No parts with quantity greater than zero to create Material Request"), alert=True)
+            frappe.msgprint(
+                _(
+                    "No parts with quantity greater than zero to create Material Request"
+                ),
+                alert=True,
+            )
             return None, None
-        
-        return warehouse, item_codes
 
+        return warehouse, item_codes
 
     def _prepare_material_request_items(self, warehouse, item_codes):
         item_uoms = {
@@ -358,7 +362,10 @@ class ServiceJobCard(WebsiteGenerator):
             if part.qty > 0:
                 uom = item_uoms.get(part.item)
                 if not uom:
-                    frappe.log_error(f"Missing UOM for item {part.item} on SJC {self.name}", "MR Creation Warning")
+                    frappe.log_error(
+                        f"Missing UOM for item {part.item} on SJC {self.name}",
+                        "MR Creation Warning",
+                    )
 
                 items.append(
                     {
@@ -376,7 +383,6 @@ class ServiceJobCard(WebsiteGenerator):
 
         return items
 
-
     @frappe.whitelist()
     def create_material_request(self):
         warehouse, item_codes = self._validate_and_get_warehouse()
@@ -386,8 +392,13 @@ class ServiceJobCard(WebsiteGenerator):
         items = self._prepare_material_request_items(warehouse, item_codes)
         if not items:
             return
-        
-        material_request_type = frappe.get_single_value("Service Settings", "default_sjc_material_request_type") or "Material Transfer"
+
+        material_request_type = (
+            frappe.get_single_value(
+                "Service Settings", "default_sjc_material_request_type"
+            )
+            or "Material Transfer"
+        )
 
         doc = frappe.get_doc(
             dict(
@@ -430,6 +441,31 @@ class ServiceJobCard(WebsiteGenerator):
                 "Service Settings", "Service Settings", "price_list"
             )
         return price_list or ""
+
+    @frappe.whitelist()
+    def close_job_card(self):
+        if self.status != "Repairing":
+            frappe.throw(
+                _(
+                    "Service Job Card only be closed when status is 'Repairing'. Current status: {0}"
+                ).format(self.status)
+            )
+        
+        if self.docstatus != 0:
+            frappe.throw(_("Only draft Service Job Cards can be closed"))
+            
+        incomplete_tasks = [task.task_name for task in self.tasks if not task.completed]
+        
+        if incomplete_tasks:
+            frappe.throw(
+                _("Please complete the following task(s) before closing: {0}")
+                .format(", ".join(incomplete_tasks))
+            )
+            
+        self.status = "Completed"
+        self.save()
+        
+        return True
 
 
 def get_item_price(item_code, price_list, company):
