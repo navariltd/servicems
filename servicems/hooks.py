@@ -16,7 +16,10 @@ fixtures = [{"doctype": "Custom Field", "filters": [["module", "=", "servicems"]
 doc_events = {
 	"Material Request": {
 		"on_submit": "servicems.service_management.controllers.material_request.update_sjc_status_to_awaiting_parts",
-	}
+	},
+    "Service Job Card": {
+        "on_update": "servicems.service_management.controllers.service_job_card.complete_service_job_card",
+    },
 }
 
 # Includes in <head>

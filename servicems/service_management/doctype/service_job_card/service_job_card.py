@@ -442,31 +442,6 @@ class ServiceJobCard(WebsiteGenerator):
             )
         return price_list or ""
 
-    @frappe.whitelist()
-    def close_job_card(self):
-        if self.status != "Repairing":
-            frappe.throw(
-                _(
-                    "Service Job Card can only be closed when status is 'Repairing'. Current status: {0}"
-                ).format(self.status)
-            )
-
-        if self.docstatus != 0:
-            frappe.throw(_("Only draft Service Job Cards can be closed"))
-
-        incomplete_tasks = [task.task_name for task in self.tasks if not task.completed]
-
-        if incomplete_tasks:
-            frappe.throw(
-                _("Please complete the following task(s) before closing: {0}").format(
-                    ", ".join(incomplete_tasks)
-                )
-            )
-
-        self.status = "Completed"
-        self.save()
-
-        return True
 
     @frappe.whitelist()
     def reopen_job_card(self):

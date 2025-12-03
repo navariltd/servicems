@@ -267,25 +267,7 @@ frappe.ui.form.on("Service Job Card", {
       frm.reload_doc();
     });
   },
-  close_job_card: function (frm) {
-    frappe.confirm(
-      __("Are you sure you want to mark this Job Card as Completed?"),
-      () => {
-        frm.call("close_job_card").then((r) => {
-          if (r.message) {
-            frm.reload_doc();
-            frappe.show_alert(
-              {
-                message: __("Job Card marked as Completed"),
-                indicator: "green",
-              },
-              5
-            );
-          }
-        });
-      }
-    );
-  },
+
   reopen_job_card: function (frm) {
     frappe.confirm(
       __("Are you sure you want to reopen this Job Card? This will set the status back to 'Repairing'."),
@@ -318,13 +300,6 @@ function set_custom_buttons(frm) {
     __("View")
   );
 
-  if (frm.doc.status === "Repairing" && frm.doc.docstatus === 0) {
-    frm
-      .add_custom_button(__("Close Job Card"), () => {
-        frm.trigger("close_job_card");
-      })
-      .addClass("btn-primary");
-  }
 
   if (frm.doc.status === "Closed" && frm.doc.docstatus === 0) {
     frm
