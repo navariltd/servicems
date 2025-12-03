@@ -259,6 +259,14 @@ frappe.ui.form.on("Service Job Card", {
       }
     }
   },
+  create_material_request: async function (frm) {
+    if (frm.is_dirty()) {
+      await frm.save();
+    }
+    frm.call("create_material_request", { type: "call" }).then((r) => {
+      frm.reload_doc();
+    });
+  },
 });
 
 function set_custom_buttons(frm) {
@@ -287,6 +295,14 @@ function set_custom_buttons(frm) {
       "Stock Entry",
       () => {
         frm.trigger("create_stock_entry");
+      },
+      "Create"
+    );
+
+    frm.add_custom_button(
+      "Material Request",
+      () => {
+        frm.trigger("create_material_request");
       },
       "Create"
     );
