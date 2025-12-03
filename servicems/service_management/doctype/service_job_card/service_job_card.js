@@ -286,6 +286,25 @@ frappe.ui.form.on("Service Job Card", {
       }
     );
   },
+  reopen_job_card: function (frm) {
+    frappe.confirm(
+      __("Are you sure you want to reopen this Job Card? This will set the status back to 'Repairing'."),
+      () => {
+        frm.call("reopen_job_card").then((r) => {
+          if (r.message) {
+            frm.reload_doc();
+            frappe.show_alert(
+              {
+                message: __("Job Card has been reopened"),
+                indicator: "blue",
+              },
+              5
+            );
+          }
+        });
+      }
+    );
+  },
 });
 
 function set_custom_buttons(frm) {
@@ -299,13 +318,20 @@ function set_custom_buttons(frm) {
     __("View")
   );
 
-  // Add Close button for Repairing status
   if (frm.doc.status === "Repairing" && frm.doc.docstatus === 0) {
     frm
       .add_custom_button(__("Close Job Card"), () => {
         frm.trigger("close_job_card");
       })
       .addClass("btn-primary");
+  }
+
+  if (frm.doc.status === "Closed" && frm.doc.docstatus === 0) {
+    frm
+      .add_custom_button(__("Re-open Job Card"), () => {
+        frm.trigger("reopen_job_card");
+      })
+      .addClass("btn-warning");
   }
 
   if (!frm.is_dirty() && frm.doc.docstatus == 0) {

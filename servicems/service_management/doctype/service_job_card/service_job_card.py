@@ -447,24 +447,60 @@ class ServiceJobCard(WebsiteGenerator):
         if self.status != "Repairing":
             frappe.throw(
                 _(
-                    "Service Job Card only be closed when status is 'Repairing'. Current status: {0}"
+                    "Service Job Card can only be closed when status is 'Repairing'. Current status: {0}"
                 ).format(self.status)
             )
-        
+
         if self.docstatus != 0:
             frappe.throw(_("Only draft Service Job Cards can be closed"))
-            
+
         incomplete_tasks = [task.task_name for task in self.tasks if not task.completed]
-        
+
         if incomplete_tasks:
             frappe.throw(
-                _("Please complete the following task(s) before closing: {0}")
-                .format(", ".join(incomplete_tasks))
+                _("Please complete the following task(s) before closing: {0}").format(
+                    ", ".join(incomplete_tasks)
+                )
             )
-            
+
         self.status = "Completed"
         self.save()
-        
+
+        return True
+
+    @frappe.whitelist()
+    def reopen_job_card(self):
+        """Reopen a closed job card by setting status back to Repairing"""
+        if self.status != "Closed":
+            frappe.throw(
+                _(
+                    "Service Job Card can only be reopened when status is 'Closed'. Current status: {0}"
+                ).format(self.status)
+            )
+
+        if self.docstatus != 0:
+            frappe.throw(_("Only draft Service Job Cards can be reopened"))
+
+        if self.invoice:
+            invoice_status = frappe.db.get_value(
+                "Sales Invoice", self.invoice, "docstatus"
+            )
+            if invoice_status == 1:
+                frappe.throw(
+                    _(
+                        "Cannot reopen Job Card. Please cancel the linked Sales Invoice {0} first."
+                    ).format(self.invoice)
+                )
+
+        self.status = "Repairing"
+        self.save()
+
+        frappe.msgprint(
+            _("Service Job Card {0} has been reopened").format(self.name),
+            alert=True,
+            indicator="blue",
+        )
+
         return True
 
 
