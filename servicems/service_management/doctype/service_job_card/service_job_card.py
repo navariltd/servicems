@@ -11,10 +11,14 @@ import json
 class ServiceJobCard(WebsiteGenerator):
     def after_insert(self):
         if self.service_booking:
-            frappe.db.set_value("Service Booking", self.service_booking, {
-                "status": "In Progress",
-                "job_card": self.name,
-            })
+            frappe.db.set_value(
+                "Service Booking",
+                self.service_booking,
+                {
+                    "status": "In Progress",
+                    "job_card": self.name,
+                },
+            )
 
     def validate(self):
         self.update_tables()
@@ -34,9 +38,11 @@ class ServiceJobCard(WebsiteGenerator):
     def on_submit(self):
         if self.status != "Completed":
             frappe.throw(_("It is not allowed to submit if it is not completed"))
-        
+
         if self.service_booking:
-            frappe.db.set_value("Service Booking", self.service_booking, "status", "Completed")
+            frappe.db.set_value(
+                "Service Booking", self.service_booking, "status", "Completed"
+            )
 
     def update_tables(self):
         for template in self.services:
@@ -86,7 +92,9 @@ class ServiceJobCard(WebsiteGenerator):
             for service in self.services:
                 if not service.rate or service.rate == 0:
                     service.rate = get_item_price(
-                        service.item, self.get_price_list(service.price_list), self.company
+                        service.item,
+                        self.get_price_list(service.price_list),
+                        self.company,
                     )
                 if service.is_billable:
                     self.service_charges += service.rate
@@ -187,8 +195,11 @@ class ServiceJobCard(WebsiteGenerator):
     def create_stock_entry(self, type):
         if self.parts and len(self.parts) > 0:
             workshop = frappe.get_doc("Service Workshop", self.workshop)
-            stock_entry_type = frappe.get_single_value("Service Settings", "default_stock_enty_type") or "Material Transfer"
-            
+            stock_entry_type = (
+                frappe.get_single_value("Service Settings", "default_stock_enty_type")
+                or "Material Transfer"
+            )
+
             items = []
             for item in self.parts:
                 if item.qty > 0:
@@ -210,7 +221,7 @@ class ServiceJobCard(WebsiteGenerator):
                     doctype="Stock Entry",
                     posting_date=nowdate(),
                     posting_time=nowtime(),
-                    stock_entry_type= stock_entry_type,
+                    stock_entry_type=stock_entry_type,
                     purpose=stock_entry_type,
                     company=self.company,
                     service_job_card=self.name,
@@ -241,7 +252,9 @@ class ServiceJobCard(WebsiteGenerator):
                     self.save()
 
     def create_invoice(self):
-        create_sales_invoice = frappe.get_single_value("Service Settings", "create_sjc_sales_invoice")
+        create_sales_invoice = frappe.get_single_value(
+            "Service Settings", "create_sjc_sales_invoice"
+        )
 
         if self.status != "Completed" or not create_sales_invoice:
             return
@@ -309,6 +322,94 @@ class ServiceJobCard(WebsiteGenerator):
             doc.insert(ignore_permissions=True)
             self.invoice = doc.name
             frappe.msgprint(_("Sales Invoice Created {0}").format(doc.name), alert=True)
+
+    def _validate_and_get_warehouse(self):
+        warehouse = frappe.get_value(
+            "Service Workshop", self.workshop, "workshop_warehouse"
+        )
+
+        if not warehouse:
+            frappe.throw(
+                _("Please set Workshop Warehouse in Service Workshop {0}").format(
+                    self.workshop
+                )
+            )
+        
+        item_codes = [part.item for part in self.parts if part.qty > 0]
+        if not item_codes:
+            frappe.msgprint(_("No parts with quantity greater than zero to create Material Request"), alert=True)
+            return None, None
+        
+        return warehouse, item_codes
+
+
+    def _prepare_material_request_items(self, warehouse, item_codes):
+        item_uoms = {
+            item.name: item.stock_uom
+            for item in frappe.get_all(
+                "Item",
+                filters={"name": ["in", item_codes]},
+                fields=["name", "stock_uom"],
+            )
+        }
+
+        items = []
+        for part in self.parts:
+            if part.qty > 0:
+                uom = item_uoms.get(part.item)
+                if not uom:
+                    frappe.log_error(f"Missing UOM for item {part.item} on SJC {self.name}", "MR Creation Warning")
+
+                items.append(
+                    {
+                        "item_code": part.item,
+                        "qty": part.qty,
+                        "uom": uom,
+                        "schedule_date": nowdate(),
+                        "warehouse": warehouse,
+                    }
+                )
+
+        if len(items) == 0:
+            frappe.msgprint(_("No items to create Material Request"), alert=True)
+            return []
+
+        return items
+
+
+    @frappe.whitelist()
+    def create_material_request(self):
+        warehouse, item_codes = self._validate_and_get_warehouse()
+        if not warehouse or not item_codes:
+            return
+
+        items = self._prepare_material_request_items(warehouse, item_codes)
+        if not items:
+            return
+        
+        material_request_type = frappe.get_single_value("Service Settings", "default_sjc_material_request_type") or "Material Transfer"
+
+        doc = frappe.get_doc(
+            dict(
+                doctype="Material Request",
+                material_request_type=material_request_type,
+                posting_date=nowdate(),
+                company=self.company,
+                service_job_card=self.name,
+                items=items,
+                set_warehouse=warehouse,
+            ),
+        )
+
+        doc.insert(ignore_permissions=True)
+
+        frappe.msgprint(
+            _("Material Request Created: {0}").format(
+                '<a href="/app/material-request/{0}">{0}</a>'.format(doc.name)
+            ),
+            alert=True,
+            indicator="green",
+        )
 
     def vaildate_complete(self):
         if self.status != "Completed":

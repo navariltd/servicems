@@ -11,7 +11,8 @@
   "create_sjc_sales_invoice",
   "column_break_vihk",
   "item_groups",
-  "use_spares_instead_of_item"
+  "use_spares_instead_of_item",
+  "default_sjc_material_request_type"
  ],
  "fields": [
   {
@@ -56,12 +57,19 @@
    "fieldname": "create_sjc_sales_invoice",
    "fieldtype": "Check",
    "label": "Create Sales Invoice on Service Job Card submission"
+  },
+  {
+   "description": "The reason to use when creating material requests from Service Job Card documents.",
+   "fieldname": "default_sjc_material_request_type",
+   "fieldtype": "Select",
+   "label": "Default SJC Material Request Type",
+   "options": "Purchase\nMaterial Transfer\nMaterial Issue\nManufacture\nCustomer Provided"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-12-02 16:44:42.667846",
+ "modified": "2025-12-02 17:32:47.993055",
  "modified_by": "Administrator",
  "module": "Service Management",
  "name": "Service Settings",
