@@ -4,18 +4,17 @@ from frappe.desk.form.assign_to import add
 
 def complete_service_job_card(doc, method=None):
     incomplete_tasks = [task.task_name for task in doc.tasks if task.completed == 0]
-    
+
     if not incomplete_tasks:
         doc.status = "Completed"
 
 
 def update_task_status(doc, method=None):
-    # Ensure the document has a _doc_before_save attribute
-    if not hasattr(doc, '_doc_before_save') or doc._doc_before_save is None:
+    if not hasattr(doc, "_doc_before_save") or doc._doc_before_save is None:
         return
 
     incomplete = [task.task_name for task in doc.tasks if task.completed == 0]
-    
+
     if doc.status == "Completed" and incomplete:
         doc.status = "Repairing"
 
@@ -28,7 +27,7 @@ def update_task_status(doc, method=None):
             existing_task = frappe.db.get_value(
                 "Task", {"job_card_task": deleted_task_name}, "name"
             )
-            
+
             if existing_task:
                 try:
                     frappe.delete_doc("Task", existing_task, force=1)
@@ -43,20 +42,33 @@ def update_task_status(doc, method=None):
             "Task", {"job_card_task": task.name}, ["name", "status"], as_dict=True
         )
 
+        if not existing_task:
+            tasks_with_subject = frappe.get_all(
+                "Task",
+                filters={
+                    "subject": task.task_name,
+                },
+                fields=["name", "status", "description"],
+            )
+
+            for t in tasks_with_subject:
+                if t.description and doc.name in t.description:
+                    existing_task = {"name": t.name, "status": t.status}
+                    frappe.db.set_value("Task", t.name, "job_card_task", task.name)
+                    break
+
         if existing_task:
-            if task.completed and existing_task.status != "Completed":
-                frappe.db.set_value(
-                    "Task", existing_task.name, "status", "Completed"
-                )
-            elif not task.completed and existing_task.status == "Completed":
-                frappe.db.set_value("Task", existing_task.name, "status", "Open")
+            if task.completed and existing_task.get("status") != "Completed":
+                frappe.db.set_value("Task", existing_task.get("name"), "status", "Completed")
+            elif not task.completed and existing_task.get("status") == "Completed":
+                frappe.db.set_value("Task", existing_task.get("name"), "status", "Open")
 
             if task.mechanic:
                 existing_assignments = frappe.get_all(
                     "ToDo",
                     filters={
                         "reference_type": "Task",
-                        "reference_name": existing_task.name,
+                        "reference_name": existing_task.get("name"),
                         "allocated_to": task.mechanic,
                         "status": "Open",
                     },
@@ -67,7 +79,7 @@ def update_task_status(doc, method=None):
                         add(
                             {
                                 "doctype": "Task",
-                                "name": existing_task.name,
+                                "name": existing_task.get("name"),
                                 "assign_to": [task.mechanic],
                                 "description": f"Updated from Service Job Card: {doc.name}",
                             }
@@ -81,9 +93,8 @@ def update_task_status(doc, method=None):
                     "subject": task.task_name,
                     "status": "Completed" if task.completed else "Open",
                     "job_card_task": task.name,
-                    "template": task.template,
                     "company": doc.company,
-                    "description": f"Task for Service Job Card: {doc.name}\nTemplate: {task.template}",
+                    "description": f"Task for Service Job Card: {doc.name}\nTemplate: {task.template or 'N/A'}",
                 }
             )
 
@@ -101,4 +112,3 @@ def update_task_status(doc, method=None):
                     )
                 except Exception as e:
                     frappe.log_error(f"Failed to assign new task: {str(e)}")
-
