@@ -19,6 +19,7 @@ doc_events = {
 	},
     "Service Job Card": {
         "on_update": "servicems.service_management.controllers.service_job_card.complete_service_job_card",
+        "on_update": "servicems.service_management.controllers.service_job_card.update_task_status",
     },
 }
 
