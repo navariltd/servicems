@@ -16,7 +16,7 @@ class ServiceJobCard(WebsiteGenerator):
                 "Service Booking",
                 self.service_booking,
                 {
-                    "status": "In Progress",
+                    "statusID": "In Progress",
                     "job_card": self.name,
                 },
             )
@@ -37,9 +37,6 @@ class ServiceJobCard(WebsiteGenerator):
             self.create_invoice()
 
     def on_submit(self):
-        if self.status != "Completed":
-            frappe.throw(_("It is not allowed to submit if it is not completed"))
-
         if self.service_booking:
             frappe.db.set_value(
                 "Service Booking", self.service_booking, "status", "Completed"

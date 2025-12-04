@@ -112,7 +112,8 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Status",
-   "options": "Initiated\nActive\nInspection\nRepairing\nAwaiting Parts\nCompleted\nClosed",
+   "options": "Initiated\nRepairing\nAwaiting Parts\nCompleted\nClosed",
+   "read_only": 1,
    "reqd": 1
   },
   {
