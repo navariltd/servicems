@@ -19,6 +19,22 @@ def update_task_status(doc, method=None):
     if doc.status == "Completed" and incomplete:
         doc.status = "Repairing"
 
+    if doc._doc_before_save:
+        old_task_names = {task.name for task in doc._doc_before_save.tasks}
+        current_task_names = {task.name for task in doc.tasks}
+        deleted_task_names = old_task_names - current_task_names
+
+        for deleted_task_name in deleted_task_names:
+            existing_task = frappe.db.get_value(
+                "Task", {"job_card_task": deleted_task_name}, "name"
+            )
+            
+            if existing_task:
+                try:
+                    frappe.delete_doc("Task", existing_task, force=1)
+                except Exception as e:
+                    frappe.log_error(f"Failed to delete task {existing_task}: {str(e)}")
+
     for task in doc.tasks:
         if not task.task_name:
             continue
