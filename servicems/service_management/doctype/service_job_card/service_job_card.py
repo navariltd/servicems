@@ -2,9 +2,10 @@
 # For license information, please see license.txt
 
 import frappe
-from frappe.website.website_generator import WebsiteGenerator
 from frappe import _
+from frappe.desk.form.assign_to import add
 from frappe.utils import nowdate, nowtime, cint
+from frappe.website.website_generator import WebsiteGenerator
 import json
 
 
@@ -44,6 +45,9 @@ class ServiceJobCard(WebsiteGenerator):
                 "Service Booking", self.service_booking, "status", "Completed"
             )
 
+    def on_update(self):
+        self.update_task_status()
+
     def update_tables(self):
         for template in self.services:
             if template.bypass_billable and template.applied:
@@ -78,39 +82,124 @@ class ServiceJobCard(WebsiteGenerator):
 
     def create_tasks_from_job_card(self, service_template):
         if service_template.tasks:
-                for task in service_template.tasks:
-                    self.append(
-                        "tasks",
-                        {
-                            "task_name": task.task_name,
-                            "template": service_template.name,
-                        },
-                    )
-            
+            for task in service_template.tasks:
+                self.append(
+                    "tasks",
+                    {
+                        "task_name": task.task_name,
+                        "template": service_template.name,
+                    },
+                )
+
         # Create Task documents for each task in the job card
         for task in self.tasks:
-            task_doc = frappe.get_doc({
-                "doctype": "Task",
-                "subject": task.task_name,
-                "status": "Open",
-                "job_card_task": task.name,
-                "template": task.template,
-                "company": self.company,
-                "description": f"Task for Service Job Card: {self.name}\nTemplate: {task.template}",
-            })
-            
-            if task.mechanic:
-                task_doc.append("assigned_to", {
-                    "user": task.mechanic
-                })
-            
-            task_doc.insert(ignore_permissions=True)
-    
-            frappe.msgprint(
-                _("Task {0} created for {1}").format(task_doc.name, task.task_name),
-                alert=True,
-                indicator="green"
+            task_doc = frappe.get_doc(
+                {
+                    "doctype": "Task",
+                    "subject": task.task_name,
+                    "status": "Open",
+                    "job_card_task": task.name,
+                    "template": task.template,
+                    "company": self.company,
+                    "description": f"Task for Service Job Card: {self.name}\nTemplate: {task.template}",
+                }
             )
+
+            task_doc.insert(ignore_permissions=True)
+
+            # Assign task to mechanic if specified
+            if task.mechanic:
+                add(
+                    {
+                        "doctype": "Task",
+                        "name": task_doc.name,
+                        "assign_to": [task.mechanic],
+                        "description": f"Assigned from Service Job Card: {self.name}",
+                    }
+                )
+
+            frappe.msgprint(
+                _("Task {0} created for {1}").format(
+                    '<a href="/app/task/{0}">{0}</a>'.format(task_doc.name),
+                    task.task_name,
+                ),
+                alert=True,
+                indicator="green",
+            )
+
+    def update_task_status(self):
+        # Update status of existing Task documents based on task completion
+        for task in self.tasks:
+            if not task.task_name:
+                continue
+
+            # Find existing Task document linked to this job card task
+            existing_task = frappe.db.get_value(
+                "Task", {"job_card_task": task.name}, ["name", "status"], as_dict=True
+            )
+
+            if existing_task:
+                # Update Task status if task is marked as completed
+                if task.completed and existing_task.status != "Completed":
+                    frappe.db.set_value(
+                        "Task", existing_task.name, "status", "Completed"
+                    )
+                elif not task.completed and existing_task.status == "Completed":
+                    # Reopen task if it was marked incomplete
+                    frappe.db.set_value("Task", existing_task.name, "status", "Open")
+
+                # Update assignment if mechanic changed
+                if task.mechanic:
+                    # Check if already assigned to this user
+                    existing_assignments = frappe.get_all(
+                        "ToDo",
+                        filters={
+                            "reference_type": "Task",
+                            "reference_name": existing_task.name,
+                            "allocated_to": task.mechanic,
+                            "status": "Open",
+                        },
+                    )
+
+                    if not existing_assignments:
+                        try:
+                            add(
+                                {
+                                    "doctype": "Task",
+                                    "name": existing_task.name,
+                                    "assign_to": [task.mechanic],
+                                    "description": f"Updated from Service Job Card: {self.name}",
+                                }
+                            )
+                        except Exception as e:
+                            frappe.log_error(f"Failed to assign task: {str(e)}")
+            else:
+                task_doc = frappe.get_doc(
+                    {
+                        "doctype": "Task",
+                        "subject": task.task_name,
+                        "status": "Completed" if task.completed else "Open",
+                        "job_card_task": task.name,
+                        "template": task.template,
+                        "company": self.company,
+                        "description": f"Task for Service Job Card: {self.name}\nTemplate: {task.template}",
+                    }
+                )
+
+                task_doc.insert(ignore_permissions=True)
+
+                if task.mechanic:
+                    try:
+                        add(
+                            {
+                                "doctype": "Task",
+                                "name": task_doc.name,
+                                "assign_to": [task.mechanic],
+                                "description": f"Assigned from Service Job Card: {self.name}",
+                            }
+                        )
+                    except Exception as e:
+                        frappe.log_error(f"Failed to assign new task: {str(e)}")
 
     def set_totals(self):
         self.service_charges = 0
@@ -470,7 +559,6 @@ class ServiceJobCard(WebsiteGenerator):
                 "Service Settings", "Service Settings", "price_list"
             )
         return price_list or ""
-
 
     @frappe.whitelist()
     def reopen_job_card(self):
