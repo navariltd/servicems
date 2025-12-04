@@ -1,6 +1,4 @@
 {
- "_comments": "[]",
- "_liked_by": "[\"Administrator\"]",
  "actions": [],
  "creation": "2021-05-25 16:24:54.769607",
  "doctype": "DocType",
@@ -9,7 +7,8 @@
  "field_order": [
   "task_name",
   "completed",
-  "template"
+  "template",
+  "mechanic"
  ],
  "fields": [
   {
@@ -32,18 +31,27 @@
    "fieldtype": "Check",
    "in_list_view": 1,
    "label": "Completed"
+  },
+  {
+   "fieldname": "mechanic",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Mechanic",
+   "options": "User"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2021-06-24 13:49:26.419054",
+ "modified": "2025-12-04 10:00:10.581745",
  "modified_by": "Administrator",
  "module": "Service Management",
  "name": "Job Card Tasks",
  "owner": "Administrator",
  "permissions": [],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "track_changes": 1
 }

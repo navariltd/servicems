@@ -2,9 +2,10 @@
 # For license information, please see license.txt
 
 import frappe
-from frappe.website.website_generator import WebsiteGenerator
 from frappe import _
+from frappe.desk.form.assign_to import add
 from frappe.utils import nowdate, nowtime, cint
+from frappe.website.website_generator import WebsiteGenerator
 import json
 
 
@@ -56,14 +57,7 @@ class ServiceJobCard(WebsiteGenerator):
 
             if not template.applied:
                 if service_template.tasks:
-                    for task in service_template.tasks:
-                        self.append(
-                            "tasks",
-                            {
-                                "task_name": task.task_name,
-                                "template": service_template.name,
-                            },
-                        )
+                    self.create_tasks_from_job_card(service_template)
 
                 if service_template.parts:
                     for part in service_template.parts:
@@ -82,6 +76,53 @@ class ServiceJobCard(WebsiteGenerator):
                         )
 
                 template.applied = 1
+
+    def create_tasks_from_job_card(self, service_template):
+        if service_template.tasks:
+            for task in service_template.tasks:
+                self.append(
+                    "tasks",
+                    {
+                        "task_name": task.task_name,
+                        "template": service_template.name,
+                    },
+                )
+
+        # Create Task documents for each task in the job card
+        for task in self.tasks:
+            task_doc = frappe.get_doc(
+                {
+                    "doctype": "Task",
+                    "subject": task.task_name,
+                    "status": "Open",
+                    "job_card_task": task.name,
+                    "template": task.template,
+                    "company": self.company,
+                    "description": f"Task for Service Job Card: {self.name}\nTemplate: {task.template}",
+                }
+            )
+
+            task_doc.insert(ignore_permissions=True)
+
+            # Assign task to mechanic if specified
+            if task.mechanic:
+                add(
+                    {
+                        "doctype": "Task",
+                        "name": task_doc.name,
+                        "assign_to": [task.mechanic],
+                        "description": f"Assigned from Service Job Card: {self.name}",
+                    }
+                )
+
+            frappe.msgprint(
+                _("Task {0} created for {1}").format(
+                    '<a href="/app/task/{0}">{0}</a>'.format(task_doc.name),
+                    task.task_name,
+                ),
+                alert=True,
+                indicator="green",
+            )
 
     def set_totals(self):
         self.service_charges = 0
@@ -441,7 +482,6 @@ class ServiceJobCard(WebsiteGenerator):
                 "Service Settings", "Service Settings", "price_list"
             )
         return price_list or ""
-
 
     @frappe.whitelist()
     def reopen_job_card(self):
