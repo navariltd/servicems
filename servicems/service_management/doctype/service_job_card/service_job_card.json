@@ -279,8 +279,7 @@
    "fieldname": "services",
    "fieldtype": "Table",
    "label": "Service Task Templates",
-   "options": "Job Card Template",
-   "reqd": 1
+   "options": "Job Card Template"
   },
   {
    "allow_bulk_edit": 1,
@@ -646,7 +645,7 @@
    "link_fieldname": "service_job_card"
   }
  ],
- "modified": "2024-11-18 16:30:51.054032",
+ "modified": "2025-12-04 14:25:01.840961",
  "modified_by": "Administrator",
  "module": "Service Management",
  "name": "Service Job Card",
@@ -670,6 +669,7 @@
   }
  ],
  "route": "job-card",
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
