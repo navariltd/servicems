@@ -56,14 +56,7 @@ class ServiceJobCard(WebsiteGenerator):
 
             if not template.applied:
                 if service_template.tasks:
-                    for task in service_template.tasks:
-                        self.append(
-                            "tasks",
-                            {
-                                "task_name": task.task_name,
-                                "template": service_template.name,
-                            },
-                        )
+                    self.create_tasks_from_job_card(service_template)
 
                 if service_template.parts:
                     for part in service_template.parts:
@@ -82,6 +75,42 @@ class ServiceJobCard(WebsiteGenerator):
                         )
 
                 template.applied = 1
+
+    def create_tasks_from_job_card(self, service_template):
+        if service_template.tasks:
+                for task in service_template.tasks:
+                    self.append(
+                        "tasks",
+                        {
+                            "task_name": task.task_name,
+                            "template": service_template.name,
+                        },
+                    )
+            
+        # Create Task documents for each task in the job card
+        for task in self.tasks:
+            task_doc = frappe.get_doc({
+                "doctype": "Task",
+                "subject": task.task_name,
+                "status": "Open",
+                "job_card_task": task.name,
+                "template": task.template,
+                "company": self.company,
+                "description": f"Task for Service Job Card: {self.name}\nTemplate: {task.template}",
+            })
+            
+            if task.mechanic:
+                task_doc.append("assigned_to", {
+                    "user": task.mechanic
+                })
+            
+            task_doc.insert(ignore_permissions=True)
+    
+            frappe.msgprint(
+                _("Task {0} created for {1}").format(task_doc.name, task.task_name),
+                alert=True,
+                indicator="green"
+            )
 
     def set_totals(self):
         self.service_charges = 0
