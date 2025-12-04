@@ -518,6 +518,36 @@ class ServiceJobCard(WebsiteGenerator):
 
         return True
 
+    @frappe.whitelist()
+    def create_vehicle_inspection(self):
+        driver_name = frappe.get_value(
+            "Service Vehicle", self.service_item_name, "driver_name"
+        )
+        inspection = frappe.get_doc(
+            {
+                "doctype": "Service Vehicle Inspection",
+                "driver_name": driver_name or "",
+                "vehicle_plate_number": self.service_item_name or "",
+                "date": nowdate(),
+                "service_job_card": self.name,
+                "mileage": self.odometer_reading or "",
+            }
+        )
+
+        inspection.insert(ignore_permissions=True)
+
+        frappe.msgprint(
+            _("Vehicle Inspection {0} created").format(
+                '<a href="/app/service-vehicle-inspection/{0}">{0}</a>'.format(
+                    inspection.name
+                )
+            ),
+            alert=True,
+            indicator="green",
+        )
+
+        return inspection.name
+
 
 def get_item_price(item_code, price_list, company):
     company_currency = frappe.get_value("Company", company, "default_currency")

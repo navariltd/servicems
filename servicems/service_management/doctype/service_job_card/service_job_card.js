@@ -270,7 +270,9 @@ frappe.ui.form.on("Service Job Card", {
 
   reopen_job_card: function (frm) {
     frappe.confirm(
-      __("Are you sure you want to reopen this Job Card? This will set the status back to 'Repairing'."),
+      __(
+        "Are you sure you want to reopen this Job Card? This will set the status back to 'Repairing'."
+      ),
       () => {
         frm.call("reopen_job_card").then((r) => {
           if (r.message) {
@@ -287,6 +289,13 @@ frappe.ui.form.on("Service Job Card", {
       }
     );
   },
+  create_vehicle_inspection: function (frm) {
+    frm.call("create_vehicle_inspection").then((r) => {
+      if (r.message) {
+        frappe.set_route("Form", "Service Vehicle Inspection", r.message);
+      }
+    });
+  },
 });
 
 function set_custom_buttons(frm) {
@@ -300,8 +309,7 @@ function set_custom_buttons(frm) {
     __("View")
   );
 
-
-  if (frm.doc.status === "Closed" && frm.doc.docstatus === 0) {
+  if (frm.doc.status === "Closed" && frm.doc.docstatus === 1) {
     frm
       .add_custom_button(__("Re-open Job Card"), () => {
         frm.trigger("reopen_job_card");
@@ -309,7 +317,7 @@ function set_custom_buttons(frm) {
       .addClass("btn-warning");
   }
 
-  if (!frm.is_dirty() && frm.doc.docstatus == 0) {
+  if (!frm.is_dirty() && frm.doc.docstatus == 1) {
     if (!frm.doc.quotation) {
       frm.add_custom_button(
         "Quotation",
@@ -332,6 +340,14 @@ function set_custom_buttons(frm) {
       "Material Request",
       () => {
         frm.trigger("create_material_request");
+      },
+      "Create"
+    );
+
+    frm.add_custom_button(
+      "Vehicle Inspection",
+      () => {
+        frm.trigger("create_vehicle_inspection");
       },
       "Create"
     );
