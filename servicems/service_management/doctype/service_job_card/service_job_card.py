@@ -2,19 +2,24 @@
 # For license information, please see license.txt
 
 import frappe
-from frappe.website.website_generator import WebsiteGenerator
 from frappe import _
+from frappe.desk.form.assign_to import add
 from frappe.utils import nowdate, nowtime, cint
+from frappe.website.website_generator import WebsiteGenerator
 import json
 
 
 class ServiceJobCard(WebsiteGenerator):
     def after_insert(self):
         if self.service_booking:
-            frappe.db.set_value("Service Booking", self.service_booking, {
-                "status": "In Progress",
-                "job_card": self.name,
-            })
+            frappe.db.set_value(
+                "Service Booking",
+                self.service_booking,
+                {
+                    "status": "In Progress",
+                    "job_card": self.name,
+                },
+            )
 
     def validate(self):
         self.update_tables()
@@ -34,9 +39,11 @@ class ServiceJobCard(WebsiteGenerator):
     def on_submit(self):
         if self.status != "Completed":
             frappe.throw(_("It is not allowed to submit if it is not completed"))
-        
+
         if self.service_booking:
-            frappe.db.set_value("Service Booking", self.service_booking, "status", "Completed")
+            frappe.db.set_value(
+                "Service Booking", self.service_booking, "status", "Completed"
+            )
 
     def update_tables(self):
         for template in self.services:
@@ -50,14 +57,7 @@ class ServiceJobCard(WebsiteGenerator):
 
             if not template.applied:
                 if service_template.tasks:
-                    for task in service_template.tasks:
-                        self.append(
-                            "tasks",
-                            {
-                                "task_name": task.task_name,
-                                "template": service_template.name,
-                            },
-                        )
+                    self.create_tasks_from_job_card(service_template)
 
                 if service_template.parts:
                     for part in service_template.parts:
@@ -77,6 +77,53 @@ class ServiceJobCard(WebsiteGenerator):
 
                 template.applied = 1
 
+    def create_tasks_from_job_card(self, service_template):
+        if service_template.tasks:
+            for task in service_template.tasks:
+                self.append(
+                    "tasks",
+                    {
+                        "task_name": task.task_name,
+                        "template": service_template.name,
+                    },
+                )
+
+        # Create Task documents for each task in the job card
+        for task in self.tasks:
+            task_doc = frappe.get_doc(
+                {
+                    "doctype": "Task",
+                    "subject": task.task_name,
+                    "status": "Open",
+                    "job_card_task": task.name,
+                    "template": task.template,
+                    "company": self.company,
+                    "description": f"Task for Service Job Card: {self.name}\nTemplate: {task.template}",
+                }
+            )
+
+            task_doc.insert(ignore_permissions=True)
+
+            # Assign task to mechanic if specified
+            if task.mechanic:
+                add(
+                    {
+                        "doctype": "Task",
+                        "name": task_doc.name,
+                        "assign_to": [task.mechanic],
+                        "description": f"Assigned from Service Job Card: {self.name}",
+                    }
+                )
+
+            frappe.msgprint(
+                _("Task {0} created for {1}").format(
+                    '<a href="/app/task/{0}">{0}</a>'.format(task_doc.name),
+                    task.task_name,
+                ),
+                alert=True,
+                indicator="green",
+            )
+
     def set_totals(self):
         self.service_charges = 0
         self.spares_cost = 0
@@ -86,7 +133,9 @@ class ServiceJobCard(WebsiteGenerator):
             for service in self.services:
                 if not service.rate or service.rate == 0:
                     service.rate = get_item_price(
-                        service.item, self.get_price_list(service.price_list), self.company
+                        service.item,
+                        self.get_price_list(service.price_list),
+                        self.company,
                     )
                 if service.is_billable:
                     self.service_charges += service.rate
@@ -187,8 +236,11 @@ class ServiceJobCard(WebsiteGenerator):
     def create_stock_entry(self, type):
         if self.parts and len(self.parts) > 0:
             workshop = frappe.get_doc("Service Workshop", self.workshop)
-            stock_entry_type = frappe.get_single_value("Service Settings", "default_stock_enty_type") or "Material Transfer"
-            
+            stock_entry_type = (
+                frappe.get_single_value("Service Settings", "default_stock_enty_type")
+                or "Material Transfer"
+            )
+
             items = []
             for item in self.parts:
                 if item.qty > 0:
@@ -210,7 +262,7 @@ class ServiceJobCard(WebsiteGenerator):
                     doctype="Stock Entry",
                     posting_date=nowdate(),
                     posting_time=nowtime(),
-                    stock_entry_type= stock_entry_type,
+                    stock_entry_type=stock_entry_type,
                     purpose=stock_entry_type,
                     company=self.company,
                     service_job_card=self.name,
@@ -241,7 +293,9 @@ class ServiceJobCard(WebsiteGenerator):
                     self.save()
 
     def create_invoice(self):
-        create_sales_invoice = frappe.get_single_value("Service Settings", "create_sjc_sales_invoice")
+        create_sales_invoice = frappe.get_single_value(
+            "Service Settings", "create_sjc_sales_invoice"
+        )
 
         if self.status != "Completed" or not create_sales_invoice:
             return
@@ -310,6 +364,105 @@ class ServiceJobCard(WebsiteGenerator):
             self.invoice = doc.name
             frappe.msgprint(_("Sales Invoice Created {0}").format(doc.name), alert=True)
 
+    def _validate_and_get_warehouse(self):
+        warehouse = frappe.get_value(
+            "Service Workshop", self.workshop, "workshop_warehouse"
+        )
+
+        if not warehouse:
+            frappe.throw(
+                _("Please set Workshop Warehouse in Service Workshop {0}").format(
+                    self.workshop
+                )
+            )
+
+        item_codes = [part.item for part in self.parts if part.qty > 0]
+        if not item_codes:
+            frappe.msgprint(
+                _(
+                    "No parts with quantity greater than zero to create Material Request"
+                ),
+                alert=True,
+            )
+            return None, None
+
+        return warehouse, item_codes
+
+    def _prepare_material_request_items(self, warehouse, item_codes):
+        item_uoms = {
+            item.name: item.stock_uom
+            for item in frappe.get_all(
+                "Item",
+                filters={"name": ["in", item_codes]},
+                fields=["name", "stock_uom"],
+            )
+        }
+
+        items = []
+        for part in self.parts:
+            if part.qty > 0:
+                uom = item_uoms.get(part.item)
+                if not uom:
+                    frappe.log_error(
+                        f"Missing UOM for item {part.item} on SJC {self.name}",
+                        "MR Creation Warning",
+                    )
+
+                items.append(
+                    {
+                        "item_code": part.item,
+                        "qty": part.qty,
+                        "uom": uom,
+                        "schedule_date": nowdate(),
+                        "warehouse": warehouse,
+                    }
+                )
+
+        if len(items) == 0:
+            frappe.msgprint(_("No items to create Material Request"), alert=True)
+            return []
+
+        return items
+
+    @frappe.whitelist()
+    def create_material_request(self):
+        warehouse, item_codes = self._validate_and_get_warehouse()
+        if not warehouse or not item_codes:
+            return
+
+        items = self._prepare_material_request_items(warehouse, item_codes)
+        if not items:
+            return
+
+        material_request_type = (
+            frappe.get_single_value(
+                "Service Settings", "default_sjc_material_request_type"
+            )
+            or "Material Transfer"
+        )
+
+        doc = frappe.get_doc(
+            dict(
+                doctype="Material Request",
+                material_request_type=material_request_type,
+                posting_date=nowdate(),
+                company=self.company,
+                service_job_card=self.name,
+                items=items,
+                set_warehouse=warehouse,
+            ),
+        )
+
+        doc.insert(ignore_permissions=True)
+
+        frappe.msgprint(
+            _("Material Request Created: {0}").format(
+                '<a href="/app/material-request/{0}">{0}</a>'.format(doc.name)
+            ),
+            alert=True,
+            indicator="green",
+        )
+
     def vaildate_complete(self):
         if self.status != "Completed":
             return
@@ -329,6 +482,41 @@ class ServiceJobCard(WebsiteGenerator):
                 "Service Settings", "Service Settings", "price_list"
             )
         return price_list or ""
+
+    @frappe.whitelist()
+    def reopen_job_card(self):
+        """Reopen a closed job card by setting status back to Repairing"""
+        if self.status != "Closed":
+            frappe.throw(
+                _(
+                    "Service Job Card can only be reopened when status is 'Closed'. Current status: {0}"
+                ).format(self.status)
+            )
+
+        if self.docstatus != 0:
+            frappe.throw(_("Only draft Service Job Cards can be reopened"))
+
+        if self.invoice:
+            invoice_status = frappe.db.get_value(
+                "Sales Invoice", self.invoice, "docstatus"
+            )
+            if invoice_status == 1:
+                frappe.throw(
+                    _(
+                        "Cannot reopen Job Card. Please cancel the linked Sales Invoice {0} first."
+                    ).format(self.invoice)
+                )
+
+        self.status = "Initiated"
+        self.save()
+
+        frappe.msgprint(
+            _("Service Job Card {0} has been reopened").format(self.name),
+            alert=True,
+            indicator="blue",
+        )
+
+        return True
 
 
 def get_item_price(item_code, price_list, company):

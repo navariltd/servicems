@@ -259,6 +259,34 @@ frappe.ui.form.on("Service Job Card", {
       }
     }
   },
+  create_material_request: async function (frm) {
+    if (frm.is_dirty()) {
+      await frm.save();
+    }
+    frm.call("create_material_request", { type: "call" }).then((r) => {
+      frm.reload_doc();
+    });
+  },
+
+  reopen_job_card: function (frm) {
+    frappe.confirm(
+      __("Are you sure you want to reopen this Job Card? This will set the status back to 'Repairing'."),
+      () => {
+        frm.call("reopen_job_card").then((r) => {
+          if (r.message) {
+            frm.reload_doc();
+            frappe.show_alert(
+              {
+                message: __("Job Card has been reopened"),
+                indicator: "blue",
+              },
+              5
+            );
+          }
+        });
+      }
+    );
+  },
 });
 
 function set_custom_buttons(frm) {
@@ -271,6 +299,15 @@ function set_custom_buttons(frm) {
     },
     __("View")
   );
+
+
+  if (frm.doc.status === "Closed" && frm.doc.docstatus === 0) {
+    frm
+      .add_custom_button(__("Re-open Job Card"), () => {
+        frm.trigger("reopen_job_card");
+      })
+      .addClass("btn-warning");
+  }
 
   if (!frm.is_dirty() && frm.doc.docstatus == 0) {
     if (!frm.doc.quotation) {
@@ -287,6 +324,14 @@ function set_custom_buttons(frm) {
       "Stock Entry",
       () => {
         frm.trigger("create_stock_entry");
+      },
+      "Create"
+    );
+
+    frm.add_custom_button(
+      "Material Request",
+      () => {
+        frm.trigger("create_material_request");
       },
       "Create"
     );

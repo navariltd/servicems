@@ -11,6 +11,18 @@ app_color = "grey"
 app_email = "info@aakvatech.com"
 app_license = "MIT"
 
+fixtures = [{"doctype": "Custom Field", "filters": [["module", "=", "servicems"]]}]
+
+doc_events = {
+	"Material Request": {
+		"on_submit": "servicems.service_management.controllers.material_request.update_sjc_status_to_awaiting_parts",
+	},
+    "Service Job Card": {
+        "on_update": "servicems.service_management.controllers.service_job_card.complete_service_job_card",
+        "on_update": "servicems.service_management.controllers.service_job_card.update_task_status",
+    },
+}
+
 # Includes in <head>
 # ------------------
 
@@ -46,7 +58,7 @@ app_include_js = "/assets/servicems/js/shortcut.js"
 
 # website user home page (by Role)
 # role_home_page = {
-#	"Role": "home_page"
+# 	"Role": "home_page"
 # }
 
 # Generators
@@ -91,13 +103,6 @@ app_include_js = "/assets/servicems/js/shortcut.js"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-#	}
-# }
 
 # Scheduled Tasks
 # ---------------
@@ -148,24 +153,22 @@ app_include_js = "/assets/servicems/js/shortcut.js"
 # --------------------
 
 user_data_fields = [
-	{
-		"doctype": "{doctype_1}",
-		"filter_by": "{filter_by}",
-		"redact_fields": ["{field_1}", "{field_2}"],
-		"partial": 1,
-	},
-	{
-		"doctype": "{doctype_2}",
-		"filter_by": "{filter_by}",
-		"partial": 1,
-	},
-	{
-		"doctype": "{doctype_3}",
-		"strict": False,
-	},
-	{
-		"doctype": "{doctype_4}"
-	}
+    {
+        "doctype": "{doctype_1}",
+        "filter_by": "{filter_by}",
+        "redact_fields": ["{field_1}", "{field_2}"],
+        "partial": 1,
+    },
+    {
+        "doctype": "{doctype_2}",
+        "filter_by": "{filter_by}",
+        "partial": 1,
+    },
+    {
+        "doctype": "{doctype_3}",
+        "strict": False,
+    },
+    {"doctype": "{doctype_4}"},
 ]
 
 # Authentication and authorization
@@ -177,5 +180,5 @@ user_data_fields = [
 
 
 website_route_rules = [
-	{'from_route': '/bookings/<path:app_path>', 'to_route': 'bookings'},
+    {"from_route": "/bookings/<path:app_path>", "to_route": "bookings"},
 ]
