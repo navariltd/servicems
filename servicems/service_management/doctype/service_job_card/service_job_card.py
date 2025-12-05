@@ -157,6 +157,18 @@ class ServiceJobCard(WebsiteGenerator):
 
     @frappe.whitelist()
     def create_parts_entry(self, type):
+        is_allowed = frappe.get_single_value(
+            "Service Settings", "use_spares_instead_of_item"
+        )
+
+        if not is_allowed:
+            frappe.throw(
+                _(
+                    "Please enable 'Use Spares Instead of Item' in Service Settings to create Parts Entry."
+                )
+            )
+            return
+
         if not self.parts:
             frappe.throw(_("Add Parts and Consumable Supplied first."))
 
@@ -204,9 +216,9 @@ class ServiceJobCard(WebsiteGenerator):
 
         frappe.msgprint(
             _("Service Parts Entry {0} Created").format(
-            '<a href="/app/service-parts-entry/{0}">{0}</a>'.format(
-                service_parts_entry.name
-            )
+                '<a href="/app/service-parts-entry/{0}">{0}</a>'.format(
+                    service_parts_entry.name
+                )
             ),
             alert=True,
             indicator="green",
