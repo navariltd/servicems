@@ -317,7 +317,7 @@ function set_custom_buttons(frm) {
       .addClass("btn-warning");
   }
 
-  if (!frm.is_dirty() && frm.doc.docstatus == 1) {
+  if (!frm.is_dirty() && frm.doc.docstatus == 0) {
     if (!frm.doc.quotation) {
       frm.add_custom_button(
         "Quotation",
@@ -352,15 +352,6 @@ function set_custom_buttons(frm) {
       "Create"
     );
 
-    if (is_parts_entry_applicable(frm)) {
-      frm.add_custom_button(
-        "Service Parts Entry",
-        () => {
-          frm.trigger("create_parts_entry");
-        },
-        "Create"
-      );
-    }
   } else {
     frm.remove_custom_button("Stock Entry", "Create");
   }

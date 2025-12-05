@@ -203,8 +203,13 @@ class ServiceJobCard(WebsiteGenerator):
             return
 
         frappe.msgprint(
-            _("Service Parts Entry {0} Created").format(service_parts_entry.name),
+            _("Service Parts Entry {0} Created").format(
+            '<a href="/app/service-parts-entry/{0}">{0}</a>'.format(
+                service_parts_entry.name
+            )
+            ),
             alert=True,
+            indicator="green",
         )
 
         self.update_supplied_parts_details(supplied_items, service_parts_entry.name)
@@ -517,13 +522,10 @@ class ServiceJobCard(WebsiteGenerator):
 
     @frappe.whitelist()
     def create_vehicle_inspection(self):
-        driver_name = frappe.get_value(
-            "Service Vehicle", self.service_item_name, "driver_name"
-        )
         inspection = frappe.get_doc(
             {
                 "doctype": "Service Vehicle Inspection",
-                "driver_name": driver_name or "",
+                "driver_name": self.driver_name or "",
                 "vehicle_plate_number": self.service_item_name or "",
                 "date": nowdate(),
                 "service_job_card": self.name,
