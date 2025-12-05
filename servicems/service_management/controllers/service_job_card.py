@@ -3,7 +3,6 @@ from frappe.desk.form.assign_to import add
 
 
 def complete_service_job_card(doc, method=None):
-    print("\n\n\n\nComplete Service Job Card Called\n\n\n\n")
     incomplete_tasks = [task.task_name for task in doc.tasks if task.completed == 0]
 
     if not incomplete_tasks:
@@ -11,7 +10,6 @@ def complete_service_job_card(doc, method=None):
 
 
 def update_task_status(doc, method=None):
-    print("\n\n\n\nUpdate Task Status Called")
     if not hasattr(doc, "_doc_before_save") or doc._doc_before_save is None:
         return
 
@@ -24,7 +22,6 @@ def update_task_status(doc, method=None):
 
 
 def _update_job_card_status(doc):
-    print("Update Job Card Status Called")
     incomplete = [task.task_name for task in doc.tasks if task.completed == 0]
 
     if doc.status == "Completed" and incomplete:
