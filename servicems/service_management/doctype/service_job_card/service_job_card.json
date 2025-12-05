@@ -646,7 +646,7 @@
    "link_fieldname": "service_job_card"
   }
  ],
- "modified": "2025-12-04 14:25:01.840961",
+ "modified": "2025-12-05 16:23:28.652465",
  "modified_by": "Administrator",
  "module": "Service Management",
  "name": "Service Job Card",
@@ -673,6 +673,23 @@
  "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": [],
+ "states": [
+  {
+   "color": "Yellow",
+   "title": "Initiated"
+  },
+  {
+   "color": "Cyan",
+   "title": "Repairing"
+  },
+  {
+   "color": "Orange",
+   "title": "Awaiting Parts"
+  },
+  {
+   "color": "Green",
+   "title": "Completed"
+  }
+ ],
  "track_changes": 1
 }
