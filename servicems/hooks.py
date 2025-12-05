@@ -15,6 +15,7 @@ fixtures = [{"doctype": "Custom Field", "filters": [["module", "=", "servicems"]
 
 doc_events = {
 	"Material Request": {
+        "validate": "servicems.service_management.controllers.material_request.verify_service_job_card_items",
 		"on_submit": "servicems.service_management.controllers.material_request.update_sjc_status_to_awaiting_parts",
 	},
     "Service Job Card": {

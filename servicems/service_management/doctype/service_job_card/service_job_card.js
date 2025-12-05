@@ -317,7 +317,7 @@ function set_custom_buttons(frm) {
       .addClass("btn-warning");
   }
 
-  if (!frm.is_dirty() && frm.doc.docstatus == 1) {
+  if (!frm.is_dirty() && frm.doc.docstatus == 0) {
     if (!frm.doc.quotation) {
       frm.add_custom_button(
         "Quotation",
