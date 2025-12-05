@@ -26,6 +26,9 @@ def _update_job_card_status(doc):
 
     if doc.status == "Completed" and incomplete:
         doc.status = "Repairing"
+    
+    if doc.status != "Completed" and not incomplete:
+        doc.status = "Completed"
 
 
 def _handle_deleted_tasks(doc):

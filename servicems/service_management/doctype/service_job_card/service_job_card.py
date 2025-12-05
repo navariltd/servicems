@@ -28,13 +28,10 @@ class ServiceJobCard(WebsiteGenerator):
         self.vaildate_complete()
 
     def before_submit(self):
-        use_parts_entry = frappe.get_value(
-            "Company Service Management Settings", self.company, "use_parts_entry"
-        )
-
-        if not use_parts_entry:
-            self.create_stock_entry("before_submit")
-            self.create_invoice()
+        if self.status != "Completed":
+            frappe.throw(_("Only 'Completed' Job Cards can be submitted"))
+            return
+        self.move_parts_to_supplied()
 
     def on_submit(self):
         if self.service_booking:
@@ -305,6 +302,51 @@ class ServiceJobCard(WebsiteGenerator):
                 self.parts = left_parts
                 if type == "call":
                     self.save()
+    
+    def move_parts_to_supplied(self):
+        stock_entry_type = (
+                frappe.get_single_value("Service Settings", "default_stock_enty_type")
+                or "Material Transfer"
+            )
+        workshop = frappe.get_doc("Service Workshop", self.workshop)
+        
+        items = []
+        for item in self.parts:
+            if item.qty > 0:
+                items.append(
+                    {
+                        "s_warehouse": workshop.parts_warehouse,
+                        "t_warehouse": workshop.workshop_warehouse,
+                        "item_code": item.item,
+                        "qty": item.qty,
+                        "uom": frappe.get_value("Item", item.item, "stock_uom"),
+                    }
+                )
+
+        stock_entry = frappe.db.get_value(
+            "Stock Entry",
+            {
+                "service_job_card": self.name,
+                "docstatus": 1,
+                "stock_entry_type": stock_entry_type,
+                "from_warehouse": workshop.parts_warehouse,
+                "to_warehouse": workshop.workshop_warehouse,
+            },
+            "name",
+        )
+
+        left_parts = []
+        for row in self.parts:
+            if row.qty > 0:
+                new_row = self.append("supplied_parts", {})
+                new_row.item = row.item
+                new_row.qty = row.qty
+                new_row.rate = row.rate
+                new_row.is_billable = row.is_billable
+                new_row.stock_entry = stock_entry
+            else:
+                left_parts.append(row)
+        self.parts = left_parts
 
     def create_invoice(self):
         create_sales_invoice = frappe.get_single_value(
