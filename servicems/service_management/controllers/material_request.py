@@ -4,7 +4,7 @@ from frappe import _
 
 def update_sjc_status_to_awaiting_parts(doc, method=None):
     """Update the status of the linked Service Job Card to 'Awaiting Parts' when a Material Request is submitted."""
-    if doc.docstatus == 1 and doc.service_job_card:
+    if doc.service_job_card:
         frappe.db.set_value("Service Job Card", doc.service_job_card, "status", "Awaiting Parts")
 
 
@@ -61,3 +61,8 @@ def verify_service_job_card_items(doc, method=None):
             title=_("Quantity Validation Error"),
         )
 
+
+def update_sjc_status_to_repairing(doc, method=None):
+    """Update the status of the linked Service Job Card to 'Repairing' when a Material Request is issued."""
+    if doc.service_job_card and doc.status == "Issued":
+        frappe.db.set_value("Service Job Card", doc.service_job_card, "status", "Repairing")
