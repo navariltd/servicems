@@ -16,7 +16,7 @@ class ServiceJobCard(WebsiteGenerator):
                 "Service Booking",
                 self.service_booking,
                 {
-                    "statusID": "In Progress",
+                    "status": "In Progress",
                     "job_card": self.name,
                 },
             )
