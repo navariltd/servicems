@@ -7,13 +7,14 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "status",
+  "company",
   "workshop",
+  "status",
   "use_spare_not_item",
   "column_break_6",
   "receiving_datetime",
   "naming_series",
-  "company",
+  "price_list",
   "section_break_7",
   "service_item_doctype",
   "service_item_name",
@@ -635,6 +636,12 @@
    "fieldtype": "Data",
    "label": "Quotation",
    "read_only": 1
+  },
+  {
+   "fieldname": "price_list",
+   "fieldtype": "Link",
+   "label": "Price List",
+   "options": "Price List"
   }
  ],
  "has_web_view": 1,
@@ -646,7 +653,7 @@
    "link_fieldname": "service_job_card"
   }
  ],
- "modified": "2025-12-05 16:23:28.652465",
+ "modified": "2025-12-06 10:04:35.265386",
  "modified_by": "Administrator",
  "module": "Service Management",
  "name": "Service Job Card",
