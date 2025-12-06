@@ -14,14 +14,16 @@ app_license = "MIT"
 fixtures = [{"doctype": "Custom Field", "filters": [["module", "=", "servicems"]]}]
 
 doc_events = {
-	"Material Request": {
+    "Material Request": {
         "validate": "servicems.service_management.controllers.material_request.verify_service_job_card_items",
-		"on_submit": "servicems.service_management.controllers.material_request.update_sjc_status_to_awaiting_parts",
+        "on_submit": "servicems.service_management.controllers.material_request.update_sjc_status_to_awaiting_parts",
         "on_change": "servicems.service_management.controllers.material_request.update_sjc_status_to_repairing",
-	},
+    },
     "Service Job Card": {
-        "on_update": "servicems.service_management.controllers.service_job_card.complete_service_job_card",
-        "on_update": "servicems.service_management.controllers.service_job_card.update_task_status",
+        "on_update": [
+            "servicems.service_management.controllers.service_job_card.complete_service_job_card",
+            "servicems.service_management.controllers.service_job_card.update_task_status",
+        ],
     },
 }
 
