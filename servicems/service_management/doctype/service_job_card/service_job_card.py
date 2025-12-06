@@ -302,14 +302,14 @@ class ServiceJobCard(WebsiteGenerator):
                 self.parts = left_parts
                 if type == "call":
                     self.save()
-    
+
     def move_parts_to_supplied(self):
         stock_entry_type = (
-                frappe.get_single_value("Service Settings", "default_stock_enty_type")
-                or "Material Transfer"
-            )
+            frappe.get_single_value("Service Settings", "default_stock_enty_type")
+            or "Material Transfer"
+        )
         workshop = frappe.get_doc("Service Workshop", self.workshop)
-        
+
         items = []
         for item in self.parts:
             if item.qty > 0:
@@ -486,7 +486,12 @@ class ServiceJobCard(WebsiteGenerator):
         if not warehouse or not item_codes:
             return
 
-        items = self._prepare_material_request_items(warehouse, item_codes)
+        issued_quantities = self._get_issued_quantities()
+
+        items = self._prepare_material_request_items_with_validation(
+            warehouse, item_codes, issued_quantities
+        )
+
         if not items:
             return
 
@@ -518,6 +523,156 @@ class ServiceJobCard(WebsiteGenerator):
             alert=True,
             indicator="green",
         )
+
+    def _get_issued_quantities(self):
+        """
+        Get total issued quantities from all Material Requests linked to this job card
+        Returns a dict with item_code as key and total issued qty as value
+        """
+        issued_quantities = {}
+
+        material_requests = frappe.get_all(
+            "Material Request",
+            filters={
+                "service_job_card": self.name,
+                "docstatus": 1,
+            },
+            fields=["name"],
+        )
+
+        if not material_requests:
+            return issued_quantities
+
+        for mr in material_requests:
+            mr_items = frappe.get_all(
+                "Material Request Item",
+                filters={"parent": mr.name},
+                fields=["item_code", "qty"],
+            )
+
+            for item in mr_items:
+                if item.item_code in issued_quantities:
+                    issued_quantities[item.item_code] += item.qty
+                else:
+                    issued_quantities[item.item_code] = item.qty
+
+        return issued_quantities
+
+    def _calculate_remaining_quantities(self, issued_quantities):
+        """
+        Calculate remaining quantities for each part based on already issued quantities
+        Returns list of dicts with part info and remaining quantities, plus validation errors
+        """
+        parts_info = []
+        validation_errors = []
+
+        for part in self.parts:
+            if part.qty <= 0:
+                continue
+
+            item_code = part.item
+            required_qty = part.qty
+            already_issued = issued_quantities.get(item_code, 0)
+            remaining_qty = required_qty - already_issued
+
+            if remaining_qty <= 0:
+                validation_errors.append(
+                    _(
+                        "Row #{0}: Item {1} - Required quantity ({2}) has already been fully issued ({3})"
+                    ).format(
+                        part.idx,
+                        frappe.bold(item_code),
+                        frappe.bold(required_qty),
+                        frappe.bold(already_issued),
+                    )
+                )
+                continue
+
+            if remaining_qty < required_qty:
+                frappe.msgprint(
+                    _(
+                        "Row #{0}: Item {1} - Only {2} units remaining to request (Required: {3}, Already Issued: {4})"
+                    ).format(
+                        part.idx,
+                        frappe.bold(item_code),
+                        frappe.bold(remaining_qty),
+                        frappe.bold(required_qty),
+                        frappe.bold(already_issued),
+                    ),
+                    alert=True,
+                    indicator="orange",
+                )
+
+            parts_info.append(
+                {
+                    "item_code": item_code,
+                    "remaining_qty": remaining_qty,
+                }
+            )
+
+        return parts_info, validation_errors
+
+    def _prepare_material_request_items_with_validation(
+        self, warehouse, item_codes, issued_quantities
+    ):
+        """
+        Prepare Material Request items with validation against already issued quantities
+        """
+        parts_info, validation_errors = self._calculate_remaining_quantities(
+            issued_quantities
+        )
+
+        if validation_errors:
+            error_message = "<br>".join(validation_errors)
+            frappe.msgprint(
+                _(
+                    "The following items have already been fully issued:<br><br>{0}"
+                ).format(error_message),
+                title=_("Material Request Validation"),
+                indicator="orange",
+            )
+
+        if not parts_info:
+            frappe.msgprint(
+                _(
+                    "No items available to create Material Request. All required items have been issued."
+                ),
+                alert=True,
+                indicator="orange",
+            )
+            return []
+
+        item_uoms = {
+            item.name: item.stock_uom
+            for item in frappe.get_all(
+                "Item",
+                filters={"name": ["in", item_codes]},
+                fields=["name", "stock_uom"],
+            )
+        }
+
+        items = []
+        for part_info in parts_info:
+            item_code = part_info["item_code"]
+            uom = item_uoms.get(item_code)
+            
+            if not uom:
+                frappe.log_error(
+                    f"Missing UOM for item {item_code} on SJC {self.name}",
+                    "MR Creation Warning",
+                )
+
+            items.append(
+                {
+                    "item_code": item_code,
+                    "qty": part_info["remaining_qty"],
+                    "uom": uom,
+                    "schedule_date": nowdate(),
+                    "warehouse": warehouse,
+                }
+            )
+
+        return items
 
     def vaildate_complete(self):
         if self.status != "Completed":
