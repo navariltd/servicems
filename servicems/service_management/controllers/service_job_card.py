@@ -26,7 +26,7 @@ def _update_job_card_status(doc):
 
     if doc.status == "Completed" and incomplete:
         doc.status = "Repairing"
-    
+
     if doc.status != "Completed" and not incomplete:
         doc.status = "Completed"
 
@@ -93,6 +93,8 @@ def _find_task_by_description(doc, task):
 def _update_existing_task(doc, task, existing_task):
     task_name = existing_task.get("name")
 
+    frappe.db.set_value("Task", task_name, "service_job_card", doc.name)
+
     _update_task_completion_status(task, existing_task)
 
     if task.mechanic:
@@ -140,6 +142,7 @@ def _create_new_task(doc, task):
             "doctype": "Task",
             "subject": task.task_name,
             "status": "Completed" if task.completed else "Open",
+            "service_job_card": doc.name,
             "job_card_task": task.name,
             "company": doc.company,
             "description": f"Task for Service Job Card: {doc.name}\nTemplate: {task.template or 'N/A'}",
