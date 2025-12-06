@@ -11,7 +11,6 @@ import json
 
 class ServiceJobCard(WebsiteGenerator):
     def after_insert(self):
-        # Handle service booking status update
         if self.service_booking:
             frappe.db.set_value(
                 "Service Booking",
@@ -23,6 +22,38 @@ class ServiceJobCard(WebsiteGenerator):
             )
 
         self._create_task_documents()
+
+        if self.price_list:
+            self._update_parts_rates_from_price_list()
+
+    def _update_parts_rates_from_price_list(self):
+        """Update rates for all parts in the parts table based on the specified price_list"""
+        if not self.parts:
+            return
+
+        updated_count = 0
+        for part in self.parts:
+            if not part.item:
+                continue
+
+            rate = get_item_price(part.item, self.price_list, self.company)
+
+            if rate and rate > 0:
+                frappe.db.set_value("Job Card Items Supplied", part.name, "rate", rate)
+                part.rate = rate
+                updated_count += 1
+
+        if updated_count > 0:
+            self.set_totals()
+            self.db_update()
+
+            frappe.msgprint(
+                _("Updated rates for {0} item(s) from Price List {1}").format(
+                    updated_count, frappe.bold(self.price_list)
+                ),
+                alert=True,
+                indicator="blue",
+            )
 
     def validate(self):
         self.update_tables()
