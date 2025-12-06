@@ -11,6 +11,7 @@ import json
 
 class ServiceJobCard(WebsiteGenerator):
     def after_insert(self):
+        # Handle service booking status update
         if self.service_booking:
             frappe.db.set_value(
                 "Service Booking",
@@ -21,23 +22,13 @@ class ServiceJobCard(WebsiteGenerator):
                 },
             )
 
+        self._create_task_documents()
+
     def validate(self):
         self.update_tables()
         self.set_parts_rate()
         self.set_totals()
         self.vaildate_complete()
-
-    def before_submit(self):
-        if self.status != "Completed":
-            frappe.throw(_("Only 'Completed' Job Cards can be submitted"))
-            return
-        self.move_parts_to_supplied()
-
-    def on_submit(self):
-        if self.service_booking:
-            frappe.db.set_value(
-                "Service Booking", self.service_booking, "status", "Completed"
-            )
 
     def update_tables(self):
         for template in self.services:
@@ -72,6 +63,7 @@ class ServiceJobCard(WebsiteGenerator):
                 template.applied = 1
 
     def create_tasks_from_job_card(self, service_template):
+        """Only populate the tasks child table - don't create Task documents yet"""
         if service_template.tasks:
             for task in service_template.tasks:
                 self.append(
@@ -82,17 +74,26 @@ class ServiceJobCard(WebsiteGenerator):
                     },
                 )
 
-        # Create Task documents for each task in the job card
+    def _create_task_documents(self):
+        """Create Task documents for each task in the job card"""
         for task in self.tasks:
+            if not task.task_name:
+                continue
+
+            # Check if Task already exists
+            existing_task = frappe.db.exists("Task", {"job_card_task": task.name})
+            if existing_task:
+                continue
+
             task_doc = frappe.get_doc(
                 {
                     "doctype": "Task",
                     "subject": task.task_name,
-                    "status": "Open",
+                    "status": "Completed" if task.completed else "Open",
+                    "service_job_card": self.name,
                     "job_card_task": task.name,
-                    "template": task.template,
                     "company": self.company,
-                    "description": f"Task for Service Job Card: {self.name}\nTemplate: {task.template}",
+                    "description": f"Task for Service Job Card: {self.name}\nTemplate: {task.template or 'N/A'}",
                 }
             )
 
@@ -100,14 +101,20 @@ class ServiceJobCard(WebsiteGenerator):
 
             # Assign task to mechanic if specified
             if task.mechanic:
-                add(
-                    {
-                        "doctype": "Task",
-                        "name": task_doc.name,
-                        "assign_to": [task.mechanic],
-                        "description": f"Assigned from Service Job Card: {self.name}",
-                    }
-                )
+                try:
+                    add(
+                        {
+                            "doctype": "Task",
+                            "name": task_doc.name,
+                            "assign_to": [task.mechanic],
+                            "description": f"Assigned from Service Job Card: {self.name}",
+                        }
+                    )
+                except Exception as e:
+                    frappe.log_error(
+                        f"Failed to assign task {task_doc.name}: {str(e)}",
+                        "Task Assignment Error",
+                    )
 
             frappe.msgprint(
                 _("Task {0} created for {1}").format(
@@ -615,22 +622,13 @@ class ServiceJobCard(WebsiteGenerator):
     def _prepare_material_request_items_with_validation(
         self, warehouse, item_codes, issued_quantities
     ):
-        """
-        Prepare Material Request items with validation against already issued quantities
-        """
         parts_info, validation_errors = self._calculate_remaining_quantities(
             issued_quantities
         )
 
         if validation_errors:
-            error_message = "<br>".join(validation_errors)
-            frappe.msgprint(
-                _(
-                    "The following items have already been fully issued:<br><br>{0}"
-                ).format(error_message),
-                title=_("Material Request Validation"),
-                indicator="orange",
-            )
+            for error in validation_errors:
+                frappe.msgprint(error, alert=True, indicator="red")
 
         if not parts_info:
             frappe.msgprint(
@@ -655,7 +653,7 @@ class ServiceJobCard(WebsiteGenerator):
         for part_info in parts_info:
             item_code = part_info["item_code"]
             uom = item_uoms.get(item_code)
-            
+
             if not uom:
                 frappe.log_error(
                     f"Missing UOM for item {item_code} on SJC {self.name}",
