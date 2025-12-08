@@ -15,6 +15,7 @@
   "receiving_datetime",
   "naming_series",
   "price_list",
+  "completion_date",
   "section_break_7",
   "service_item_doctype",
   "service_item_name",
@@ -642,6 +643,15 @@
    "fieldtype": "Link",
    "label": "Price List",
    "options": "Price List"
+  },
+  {
+   "fieldname": "completion_date",
+   "fieldtype": "Datetime",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Completion Date",
+   "read_only": 1
   }
  ],
  "has_web_view": 1,
@@ -653,7 +663,7 @@
    "link_fieldname": "service_job_card"
   }
  ],
- "modified": "2025-12-06 10:04:35.265386",
+ "modified": "2025-12-08 09:23:38.134380",
  "modified_by": "Administrator",
  "module": "Service Management",
  "name": "Service Job Card",
