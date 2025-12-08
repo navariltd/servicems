@@ -39,6 +39,12 @@ def get_columns():
 			"width": 150
 		},
 		{
+			"fieldname": "service_charges",
+			"label": "Service Charges",
+			"fieldtype": "Currency",
+			"width": 150
+		},
+		{
 			"fieldname": "total",
 			"label": "Total",
 			"fieldtype": "Currency",
@@ -50,6 +56,12 @@ def get_columns():
 			"fieldtype": "Data",
 			"width": 150
 		},
+		{
+			"fieldname": "completion_date",
+			"label": "Completion Date",
+			"fieldtype": "Datetime",
+			"width": 180
+		}
 	]
 
 
@@ -60,8 +72,10 @@ def get_data(filters):
 			ServiceJobCard.name.as_("service_job_card"),
 			ServiceJobCard.service_item_name,
 			ServiceJobCard.spares_cost,
+			ServiceJobCard.service_charges,
 			ServiceJobCard.total,
-			ServiceJobCard.status
+			ServiceJobCard.status,
+			ServiceJobCard.completion_date,
 		)
 		.orderby(ServiceJobCard.total, order=frappe.qb.desc)
 	)
@@ -77,12 +91,20 @@ def apply_query_filters(query, filters={}):
 	if not filters:
 		return query
 
+	from_date = filters.get("from_date")
+	to_date = filters.get("to_date")
+	
+	if from_date:
+		from_date = f"{from_date} 00:00:00"
+	if to_date:
+		to_date = f"{to_date} 23:59:59"
+
 	if filters.get("company"):
 		query = query.where(ServiceJobCard.company == filters["company"])
 	if filters.get("from_date"):
-		query = query.where(ServiceJobCard.creation >= filters["from_date"])
+		query = query.where(ServiceJobCard.creation >= from_date)
 	if filters.get("to_date"):
-		query = query.where(ServiceJobCard.creation <= filters["to_date"])
+		query = query.where(ServiceJobCard.creation <= to_date)
 	if filters.get("service_item_name"):
 		query = query.where(ServiceJobCard.service_item_name == filters["service_item_name"])
 	if filters.get("status"):

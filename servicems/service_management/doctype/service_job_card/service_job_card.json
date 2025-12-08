@@ -649,7 +649,6 @@
    "fieldtype": "Datetime",
    "in_filter": 1,
    "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "Completion Date",
    "read_only": 1
   }
@@ -663,7 +662,7 @@
    "link_fieldname": "service_job_card"
   }
  ],
- "modified": "2025-12-08 09:23:38.134380",
+ "modified": "2025-12-08 09:29:16.396241",
  "modified_by": "Administrator",
  "module": "Service Management",
  "name": "Service Job Card",
