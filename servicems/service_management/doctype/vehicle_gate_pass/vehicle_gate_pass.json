@@ -8,7 +8,7 @@
   "section_break_b0ff",
   "amended_from",
   "company",
-  "created_on",
+  "completed_on",
   "column_break_iack",
   "service_job_card",
   "service_vehicle",
@@ -30,6 +30,7 @@
    "search_index": 1
   },
   {
+   "fetch_from": "service_job_card.service_item_name",
    "fieldname": "service_vehicle",
    "fieldtype": "Link",
    "label": "Service Vehicle",
@@ -46,11 +47,7 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "created_on",
-   "fieldtype": "Datetime",
-   "label": "Created On"
-  },
-  {
+   "fetch_from": "service_vehicle.driver_name",
    "fieldname": "driver",
    "fieldtype": "Link",
    "label": "Driver",
@@ -60,14 +57,21 @@
    "fieldname": "service_job_card",
    "fieldtype": "Link",
    "label": "Service Job Card",
+   "link_filters": "[[\"Service Job Card\",\"status\",\"=\",\"Completed\"]]",
    "options": "Service Job Card"
+  },
+  {
+   "fieldname": "completed_on",
+   "fieldtype": "Datetime",
+   "label": "Completed On",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-12-09 09:03:30.373818",
+ "modified": "2025-12-09 09:47:16.989700",
  "modified_by": "Administrator",
  "module": "Service Management",
  "name": "Vehicle Gate Pass",
