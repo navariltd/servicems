@@ -9,6 +9,7 @@
   "price_list",
   "default_stock_enty_type",
   "create_sjc_sales_invoice",
+  "auto_submit_sjc_material_request",
   "column_break_vihk",
   "item_groups",
   "use_spares_instead_of_item",
@@ -64,12 +65,19 @@
    "fieldtype": "Select",
    "label": "Default SJC Material Request Type",
    "options": "Purchase\nMaterial Transfer\nMaterial Issue\nManufacture\nCustomer Provided"
+  },
+  {
+   "default": "1",
+   "description": "Submit the material request created from the Service Job Card document immediately it's created.",
+   "fieldname": "auto_submit_sjc_material_request",
+   "fieldtype": "Check",
+   "label": "Submit Material Request from Service Job Card"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-12-02 17:32:47.993055",
+ "modified": "2025-12-09 18:47:43.942136",
  "modified_by": "Administrator",
  "module": "Service Management",
  "name": "Service Settings",

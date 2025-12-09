@@ -553,6 +553,13 @@ class ServiceJobCard(WebsiteGenerator):
         )
 
         doc.insert(ignore_permissions=True)
+        if (
+            frappe.get_single_value(
+                "Service Settings", "auto_submit_sjc_material_request"
+            )
+            == 1
+        ):
+            doc.submit()
 
         frappe.msgprint(
             _("Material Request Created: {0}").format(
