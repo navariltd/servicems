@@ -6,7 +6,7 @@ from frappe.utils import now
 def complete_service_job_card(doc, method=None):
     incomplete_tasks = [task.task_name for task in doc.tasks if task.completed == 0]
 
-    if not incomplete_tasks:
+    if not incomplete_tasks and len(doc.tasks) > 0:
         doc.completion_date = now()
         doc.status = "Completed"
 
@@ -29,7 +29,7 @@ def _update_job_card_status(doc):
     if doc.status == "Completed" and incomplete:
         doc.status = "Repairing"
 
-    if doc.status != "Completed" and not incomplete:
+    if doc.status != "Completed" and not incomplete and len(doc.tasks) > 0:
         doc.status = "Completed"
 
 
