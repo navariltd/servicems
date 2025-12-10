@@ -17,6 +17,7 @@
   "price_list",
   "completion_date",
   "section_break_7",
+  "service_booking",
   "service_item_doctype",
   "service_item_name",
   "customer",
@@ -25,7 +26,6 @@
   "driver_name",
   "driver_mobile_number",
   "column_break_11",
-  "service_booking",
   "bay",
   "make",
   "type",
@@ -147,10 +147,12 @@
    "label": "Service Item Doctype"
   },
   {
+   "fetch_from": "service_booking.service_vehicle",
    "fieldname": "service_item_name",
    "fieldtype": "Link",
-   "label": "Service Item Name",
+   "label": "Service Vehicle",
    "options": "Service Vehicle",
+   "read_only": 1,
    "reqd": 1
   },
   {
@@ -620,6 +622,7 @@
    "label": "Last Service Odometer Reading"
   },
   {
+   "fetch_from": "service_booking.bay",
    "fieldname": "bay",
    "fieldtype": "Link",
    "label": "Bay",
@@ -628,10 +631,11 @@
   {
    "fieldname": "service_booking",
    "fieldtype": "Link",
-   "hidden": 1,
+   "in_list_view": 1,
    "label": "Service Booking",
+   "link_filters": "[[\"Service Booking\",\"status\",\"=\",\"Pending\"]]",
    "options": "Service Booking",
-   "read_only": 1
+   "reqd": 1
   },
   {
    "fieldname": "quotation",
@@ -663,7 +667,7 @@
    "link_fieldname": "service_job_card"
   }
  ],
- "modified": "2025-12-10 17:58:56.174442",
+ "modified": "2025-12-10 19:20:12.611732",
  "modified_by": "Administrator",
  "module": "Service Management",
  "name": "Service Job Card",
