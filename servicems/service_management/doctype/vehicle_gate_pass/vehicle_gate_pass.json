@@ -47,10 +47,10 @@
    "fieldtype": "Column Break"
   },
   {
-   "fetch_from": "service_vehicle.driver_name",
+   "fetch_from": "service_vehicle.custom_driver_name",
    "fieldname": "driver",
    "fieldtype": "Link",
-   "label": "Driver",
+   "label": "Driver Name",
    "options": "Driver"
   },
   {
@@ -71,7 +71,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-12-09 09:47:16.989700",
+ "modified": "2025-12-10 12:49:03.983484",
  "modified_by": "Administrator",
  "module": "Service Management",
  "name": "Vehicle Gate Pass",
