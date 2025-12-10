@@ -7,6 +7,7 @@
  "field_order": [
   "default_is_billable",
   "price_list",
+  "cost_center",
   "default_stock_enty_type",
   "create_sjc_sales_invoice",
   "auto_submit_sjc_material_request",
@@ -72,12 +73,18 @@
    "fieldname": "auto_submit_sjc_material_request",
    "fieldtype": "Check",
    "label": "Submit Material Request from Service Job Card"
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "label": "Default Cost Centre",
+   "options": "Cost Center"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-12-09 18:47:43.942136",
+ "modified": "2025-12-10 07:24:31.315395",
  "modified_by": "Administrator",
  "module": "Service Management",
  "name": "Service Settings",
