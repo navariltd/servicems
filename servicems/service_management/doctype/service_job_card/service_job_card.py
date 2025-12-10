@@ -11,6 +11,8 @@ import json
 
 class ServiceJobCard(WebsiteGenerator):
     def after_insert(self):
+        price_list = frappe.get_single_value("Service Settings", "price_list")
+        cost_center = frappe.get_single_value("Service Settings", "cost_center")
         if self.service_booking:
             frappe.db.set_value(
                 "Service Booking",
@@ -56,6 +58,9 @@ class ServiceJobCard(WebsiteGenerator):
             )
 
     def validate(self):
+        self.price_list = frappe.db.get_single_value("Service Settings", "price_list")
+        self.cost_center = frappe.db.get_single_value("Service Settings", "cost_center")
+
         self.update_tables()
         self.set_parts_rate()
         self.set_totals()
