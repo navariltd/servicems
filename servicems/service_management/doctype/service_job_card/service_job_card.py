@@ -60,6 +60,13 @@ class ServiceJobCard(WebsiteGenerator):
         self.set_parts_rate()
         self.set_totals()
         self.vaildate_complete()
+    
+    def on_submit(self):
+        if len(self.tasks) == 0:
+            frappe.throw(_("Please add at least one task before submitting."))
+        
+        if self.status != "Completed":
+            frappe.throw(_("Cannot submit Service Job Card unless status is 'Completed'."))
 
     def update_tables(self):
         for template in self.services:
