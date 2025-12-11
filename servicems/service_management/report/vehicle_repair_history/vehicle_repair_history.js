@@ -22,12 +22,35 @@ frappe.query_reports["Vehicle Repair History"] = {
       label: __("Service Job Card"),
       fieldtype: "Link",
       options: "Service Job Card",
+      get_query: function () {
+        let service_item_name =
+          frappe.query_report.get_filter_value("service_item_name");
+        if (service_item_name) {
+          return {
+            filters: {
+              service_item_name: service_item_name,
+			  status: "Completed",
+            },
+          };
+        }
+      },
     },
     {
       fieldname: "service_booking",
       label: __("Service Booking"),
       fieldtype: "Link",
       options: "Service Booking",
+	  get_query: function () {
+		let service_item_name = frappe.query_report.get_filter_value("service_item_name");
+		if (service_item_name) {
+			return {
+				filters: {
+					service_vehicle: service_item_name,
+					status: "Completed",
+				},
+			};
+		}
+	  }
     },
   ],
 };
