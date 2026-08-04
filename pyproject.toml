@@ -7,6 +7,9 @@ name = "servicems"
 version = "0.1.0"
 requires-python = ">=3.14"
 
+[tool.bench.frappe-dependencies]
+frappe = ">=16.0.0-dev,<17.0.0"
+
 [tool.setuptools.packages.find]
 include = ["servicems*"]
 exclude = ["frontend*"]
