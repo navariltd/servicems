@@ -1,0 +1,37 @@
+{
+ "app": "servicems",
+ "creation": "2026-06-26 11:21:20.804788",
+ "docstatus": 0,
+ "doctype": "Workspace Sidebar",
+ "idx": 0,
+ "items": [
+  {
+   "child": 0,
+   "collapsible": 1,
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Service MS",
+   "link_to": "Service MS",
+   "link_type": "Workspace",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Job Cards",
+   "link_to": "Service Job Card",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-06-26 11:23:00.161739",
+ "modified_by": "Administrator",
+ "name": "Service MS",
+ "owner": "Administrator",
+ "standard": 1,
+ "title": "Service MS"
+}
