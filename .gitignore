@@ -28,3 +28,4 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+servicems/public/node_modules
