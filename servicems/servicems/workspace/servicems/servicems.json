@@ -1,0 +1,109 @@
+{
+ "app": "servicems",
+ "charts": [],
+ "content": "[{\"id\":\"nkobVohEMx\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h2\\\">Service Management</span>\",\"col\":12}},{\"id\":\"1l8tcnC39M\",\"type\":\"paragraph\",\"data\":{\"text\":\"Click on \\n\\t\\t\\t\\n\\t\\t\\t\\n\\t\\t to edit\",\"col\":12}},{\"id\":\"SUL7go9K1l\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Booking\",\"col\":3}},{\"id\":\"Vp7D4g8fXS\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Job Card\",\"col\":3}},{\"id\":\"CLPbnbmvDj\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Workshop\",\"col\":3}},{\"id\":\"TPu0N7mr6a\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Bay\",\"col\":3}},{\"id\":\"VukDkZwOaO\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Vehicle Inspection\",\"col\":3}},{\"id\":\"ioR4ySfL60\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Vehicle\",\"col\":3}},{\"id\":\"CYKGN1mAKQ\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Settings\",\"col\":3}},{\"id\":\"QPCUcFQWfR\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Item\",\"col\":3}},{\"id\":\"h9uI69phJs\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"pk74AfTdKH\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h3\\\">Reports</span>\",\"col\":12}},{\"id\":\"CFBfhATIyI\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Repair Cost Per Service Job Card\",\"col\":3}},{\"id\":\"YPaRidRycR\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Vehicle Repair History\",\"col\":3}}]",
+ "creation": "2026-08-06 10:47:23.344822",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "hide_custom": 0,
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Servicems",
+ "link_type": "DocType",
+ "links": [],
+ "modified": "2026-08-06 10:52:32.446935",
+ "modified_by": "Administrator",
+ "module": "servicems",
+ "name": "Servicems",
+ "number_cards": [],
+ "owner": "Administrator",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 0.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Service Booking",
+   "link_to": "Service Booking",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Service Job Card",
+   "link_to": "Service Job Card",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Service Workshop",
+   "link_to": "Service Workshop",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Bay",
+   "link_to": "Bay",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Service Vehicle Inspection",
+   "link_to": "Service Vehicle Inspection",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Service Vehicle",
+   "link_to": "Service Vehicle",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Service Settings",
+   "link_to": "Service Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Item",
+   "link_to": "Item",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Repair Cost Per Service Job Card",
+   "link_to": "Repair Cost per Service Job Card",
+   "report_ref_doctype": "Service Job Card",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Vehicle Repair History",
+   "link_to": "Vehicle Repair History",
+   "report_ref_doctype": "Service Job Card",
+   "type": "Report"
+  }
+ ],
+ "title": "Servicems",
+ "type": "Workspace"
+}
